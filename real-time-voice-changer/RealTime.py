@@ -14,6 +14,8 @@ audio = pyaudio.PyAudio()
 stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, output=True, frames_per_buffer=CHUNK)
 
 print("start recording...")
+print("talk...")
+
 while True:
     data = stream.read(CHUNK)  # read each chunk
     data = np.array(wave.struct.unpack("%dh" % (len(data) / 2),
