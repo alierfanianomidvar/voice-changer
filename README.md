@@ -1,11 +1,11 @@
 # voice-changer
 The purpose of this project is to change the sound of an audio file.
 
-###This project consists of two parts:
+### This project consists of two parts:
 - Change the speaker's voice 
 - Implement an online voice change algorithm
 
-###Change the speaker's voice
+### Change the speaker's voice
 In the first phase, we intend to take the audio file from the first speaker, change the speaker voice, and save the new file. There are different ways to do this. One of the ways to change the sound is to change the pitch of the voice. This is done by shifting the pitch using special techniques such as pitch Synchronous Over Lap-Add. There is another way. Using the Synchronous Over Lap-Add algorithm or SOLA that we will use SOLA in this project.
 
 This algorithm for changing the sound consists of three parts:
@@ -13,7 +13,7 @@ This algorithm for changing the sound consists of three parts:
 - Shift separated signals
 - Connect the separated parts
 
-######part one
+###### part one
 In this algorithm, we divide the signal by as many as 2048 after that divide each chunk into 4 parts.
 
 ```
@@ -78,7 +78,7 @@ new_data = np.column_stack((data_1_new, data_2_new, data_3_new, data_4_new)).rav
     output.writeframes(new_data)
 ```
 
-###Implement an online voice change algorithm
+### Implement an online voice change algorithm
 
 In this phase, the method of changing the sound is the same as the previous phase and does not change,
 but for the voice recording section, it is different from the previous phase. In this phase, we put the `stream.read()` 
