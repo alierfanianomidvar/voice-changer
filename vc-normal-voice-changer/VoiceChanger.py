@@ -53,7 +53,7 @@ for i in range(count):
     data = np.frombuffer(save.readframes(newRate), dtype=np.int16) * 3  # increase quality of voice
     data_fourier = np.fft.rfft(data)
     mean_freq = np.mean(data_fourier)
-    data_1 = data[0::4]  # devide each chunck into 4 parts
+    data_1 = data[0::4]  # divide each chunck into 4 parts
     data_2 = data[1::4]
     data_3 = data[2::4]
     data_4 = data[3::4]
