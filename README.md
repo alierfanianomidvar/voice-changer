@@ -82,7 +82,7 @@ new_data = np.column_stack((data_1_new, data_2_new, data_3_new, data_4_new)).rav
 
 In this phase, the method of changing the sound is the same as the previous phase and does not change,
 but for the voice recording section, it is different from the previous phase. In this phase, we put the `stream.read()` 
-function in a loop and call it, then use the voice. We will.
+function in a loop and call it, then use the voice.
 
 ```
 while True:
