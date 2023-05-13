@@ -1,16 +1,22 @@
 import pyaudio
 import wave
 import numpy as np
+from scipy.io import wavfile
+from scipy import signal
 
 CHUNK = 2048
 RATE = 32000
 FORMAT = pyaudio.paInt16
 CHANNEL = 1
 TIME = 5
-SAVE = "saveVoice.wav"
-OUTPUT = "output.wav"
+SAVE = "saveVoiceNew.wav"
+OUTPUT = "change_voice_New_2.wav"
 SHIFT = 50
 
+## for enhancing the voice qulity \
+low_cut = 50
+high_cut = 8000
+cut_off_freq = 100
 
 """ recording """
 audio = pyaudio.PyAudio()
@@ -90,6 +96,30 @@ for i in range(count):
     new_data = np.column_stack((data_1_new, data_2_new, data_3_new, data_4_new)).ravel().astype(
         np.int16)  # reasemble parts together
     output.writeframes(new_data)
+
+    #####
+
+    sample_rate, sound_data = wavfile.read(OUTPUT)
+    sound_data = sound_data / 32767.0
+
+    b, a = signal.butter(4, [low_cut / (sample_rate / 2), high_cut / (sample_rate / 2)], btype='band')
+    sound_filtered = signal.filtfilt(b, a, sound_data)
+
+    # Apply FFT to filtered sound data
+    sound_fft = np.fft.fft(sound_filtered)
+
+    # Apply high-pass filter to remove low-frequency noise
+    fft_size = len(sound_fft)
+    sound_fft[:int((fft_size + 1) * cut_off_freq / sample_rate)] = 0
+
+    # Inverse FFT to get enhanced sound signal
+    sound_enhanced = np.real(np.fft.ifft(sound_fft))
+
+    # Scale the enhanced sound signal back to the original range
+    sound_enhanced = np.int16(sound_enhanced / np.max(np.abs(sound_enhanced)) * 32767)
+
+    # Write the enhanced sound signal to a file
+    wavfile.write("change_voice_new.wav", sample_rate, sound_enhanced)
 
 output.close()
 save.close()
