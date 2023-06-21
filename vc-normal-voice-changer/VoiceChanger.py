@@ -59,7 +59,7 @@ for i in range(count):
     data = np.frombuffer(save.readframes(newRate), dtype=np.int16) * 3  # increase quality of voice
     data_fourier = np.fft.rfft(data)
     mean_freq = np.mean(data_fourier)
-    data_1 = data[0::4]  # divide each chunck into 4 parts
+    data_1 = data[0::4]  # divide each chunk into 4 parts
     data_2 = data[1::4]
     data_3 = data[2::4]
     data_4 = data[3::4]
@@ -83,7 +83,7 @@ for i in range(count):
     data_4_fourier[:SHIFT] = mean_freq
     data_4_fourier[-SHIFT:] = mean_freq
 
-    data_1_new = np.fft.ifft(data_1_fourier)
+    data_1_new = np.fft.ifft(data_1_fourier)  # inverse fft.
     data_2_new = np.fft.ifft(data_2_fourier)
     data_3_new = np.fft.ifft(data_3_fourier)
     data_4_new = np.fft.ifft(data_4_fourier)
@@ -94,7 +94,7 @@ for i in range(count):
     data_4_new = np.real(data_4_new)
 
     new_data = np.column_stack((data_1_new, data_2_new, data_3_new, data_4_new)).ravel().astype(
-        np.int16)  # reasemble parts together
+        np.int16)  # resemble parts together
     output.writeframes(new_data)
 
     #####

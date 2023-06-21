@@ -4,7 +4,13 @@ import numpy as np
 from scipy.fft import rfft, irfft
 
 
-def record_audio(filename, duration=5, rate=44100, channels=1, chunk=1024, format=pyaudio.paInt16):
+def record_audio(
+        filename,
+        duration=5,
+        rate=44100,
+        channels=1,
+        chunk=1024,
+        format=pyaudio.paInt16):
     p = pyaudio.PyAudio()
 
     stream = p.open(format=format,
@@ -35,24 +41,30 @@ def record_audio(filename, duration=5, rate=44100, channels=1, chunk=1024, forma
     wf.close()
 
 
-def modify_pitch(filename, output_filename, pitch_shift, rate=44100):
-    wf = wave.open(filename, "rb")
+def modify_pitch(
+        filename,
+        output_filename,
+        pitch_shift,
+        rate=44100):
+    wf = wave.open(filename, "rb")  # rb -> Binary read mode: output -> Numpy Array.
     n_frames = wf.getnframes()
     audio_data = wf.readframes(n_frames)
+
+    # Converting the binary audio data from the WAV file into a NumPy array of 16-bit integers ->
     audio_data = np.frombuffer(audio_data, dtype=np.int16)
     wf.close()
 
-    audio_fft = rfft(audio_data)
+    audio_fft = rfft(audio_data)  # fft for real-value signal
     n = len(audio_fft)
     shifted_fft = np.zeros(n, dtype=complex)
     shift = int(n * pitch_shift / rate)
 
     for i in range(n):
-        shifted_fft[(i + shift) % n] = audio_fft[i]
+        shifted_fft[(i + shift) % n] = audio_fft[i]  # Shifting the value of audio.
 
-    modified_audio_data = irfft(shifted_fft).astype(np.int16)
+    modified_audio_data = irfft(shifted_fft).astype(np.int16)  # Inverse fft.
 
-    wf = wave.open(output_filename, "wb")
+    wf = wave.open(output_filename, "wb")  # wb -> binary Write mode.
     wf.setnchannels(1)
     wf.setsampwidth(2)
     wf.setframerate(rate)
@@ -61,21 +73,23 @@ def modify_pitch(filename, output_filename, pitch_shift, rate=44100):
 
 
 def main():
-
     # Output file name ->
     input_filename = "recorded_audio_3.wav"
     output_filename = "modified_audio_3.wav"
 
+    # Recording the user voice and save it with the name tf ->
     record_audio(input_filename)
 
     while True:
         try:
+            # Getting the amount of the pitch shift from user ->
             pitch_shift = int(
                 input("Enter the desired pitch shift in Hz (positive to increase, negative to decrease): "))
             break
         except ValueError:
             print("Invalid input. Please enter an integer value.")
 
+    # Changing the pitch function ->
     modify_pitch(input_filename, output_filename, pitch_shift)
     print(f"Modified audio saved as {output_filename}")
 
