@@ -2,7 +2,7 @@ import pyaudio
 import wave
 import numpy as np
 from scipy.fft import rfft, irfft
-
+import matplotlib.pyplot as plt
 
 def record_audio(
         filename,
@@ -46,6 +46,7 @@ def modify_pitch(
         output_filename,
         pitch_shift,
         rate=44100):
+
     wf = wave.open(filename, "rb")  # rb -> Binary read mode: output -> Numpy Array.
     n_frames = wf.getnframes()
     audio_data = wf.readframes(n_frames)
@@ -59,10 +60,25 @@ def modify_pitch(
     shifted_fft = np.zeros(n, dtype=complex)
     shift = int(n * pitch_shift / rate)
 
+    time = np.arange(len(audio_data)) / rate
+    # Plot the original Voice
+    fig, axs = plt.subplots(2, 1)
+    axs[0].plot(time, audio_data)
+    axs[0].set_title("Original Audio")
+    axs[0].set_xlabel("Time (s)")
+    axs[0].set_ylabel("Amplitude")
+
     for i in range(n):
         shifted_fft[(i + shift) % n] = audio_fft[i]  # Shifting the value of audio.
 
     modified_audio_data = irfft(shifted_fft).astype(np.int16)  # Inverse fft.
+
+    # Plot the modified Voice
+    axs[1].plot(time, modified_audio_data)
+    axs[1].set_title("Modified Audio")
+    axs[1].set_xlabel("Time (s)")
+    axs[1].set_ylabel("Amplitude")
+    plt.show()
 
     wf = wave.open(output_filename, "wb")  # wb -> binary Write mode.
     wf.setnchannels(1)
@@ -72,7 +88,7 @@ def modify_pitch(
     wf.close()
 
 
-def main():
+def start():
     # Output file name ->
     input_filename = "recorded_audio_3.wav"
     output_filename = "modified_audio_3.wav"
@@ -95,4 +111,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    start()
