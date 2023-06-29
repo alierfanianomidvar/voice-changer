@@ -4,6 +4,8 @@ import numpy as np
 from scipy.fft import rfft, irfft
 import matplotlib.pyplot as plt
 
+
+
 def record_audio(
         filename,
         duration=5,
@@ -46,7 +48,6 @@ def modify_pitch(
         output_filename,
         pitch_shift,
         rate=44100):
-
     wf = wave.open(filename, "rb")  # rb -> Binary read mode: output -> Numpy Array.
     n_frames = wf.getnframes()
     audio_data = wf.readframes(n_frames)
@@ -55,30 +56,51 @@ def modify_pitch(
     audio_data = np.frombuffer(audio_data, dtype=np.int16)
     wf.close()
 
-    audio_fft = rfft(audio_data)  # fft for real-value signal
+    #audio_fft = rfft(audio_data)  # fft for real-value signal
+    audio_fft = np.fft.rfft(audio_data)  # fft for real-value signal
     n = len(audio_fft)
     shifted_fft = np.zeros(n, dtype=complex)
     shift = int(n * pitch_shift / rate)
 
     time = np.arange(len(audio_data)) / rate
     # Plot the original Voice
-    fig, axs = plt.subplots(2, 1)
-    axs[0].plot(time, audio_data)
-    axs[0].set_title("Original Audio")
-    axs[0].set_xlabel("Time (s)")
-    axs[0].set_ylabel("Amplitude")
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    axs[0, 0].plot(time, audio_data)
+    axs[0, 0].set_title("Original Audio")
+    axs[0, 0].set_xlabel("Time (s)")
+    axs[0, 0].set_ylabel("Amplitude")
 
+    freqs = np.fft.rfftfreq(len(audio_data), 1 / rate)
+    freq_range = (freqs > 0) & (freqs < 2000)  # Only plot frequencies up to 2000 Hz
+    axs[0, 1].plot(freqs[freq_range], np.abs(audio_fft)[freq_range])
+    axs[0, 1].set_title("Original FFT")
+    axs[0, 1].set_xlabel("Frequency (Hz)")
+    axs[0, 1].set_ylabel("Magnitude")
+
+    print("data :", audio_data[1])
     for i in range(n):
+        print(i, "move to -> ", (i + shift) % n)
         shifted_fft[(i + shift) % n] = audio_fft[i]  # Shifting the value of audio.
 
     modified_audio_data = irfft(shifted_fft).astype(np.int16)  # Inverse fft.
 
+    print("modified_audio_data:", modified_audio_data[1])
+
     # Plot the modified Voice
-    axs[1].plot(time, modified_audio_data)
-    axs[1].set_title("Modified Audio")
-    axs[1].set_xlabel("Time (s)")
-    axs[1].set_ylabel("Amplitude")
+    axs[1, 0].plot(time, modified_audio_data)
+    axs[1, 0].set_title("Modified Audio")
+    axs[1, 0].set_xlabel("Time (s)")
+    axs[1, 0].set_ylabel("Amplitude")
+
+    residual_signal = modified_audio_data - audio_data
+    axs[1, 1].plot(time, residual_signal)
+    axs[1, 1].set_title("Residual Signal")
+    axs[1, 1].set_xlabel("Time (s)")
+    axs[1, 1].set_ylabel("Amplitude")
+    plt.tight_layout()
     plt.show()
+
+    #filtered_audio_data = apply_lowpass_filter(modified_audio_data, rate)
 
     wf = wave.open(output_filename, "wb")  # wb -> binary Write mode.
     wf.setnchannels(1)

@@ -9,54 +9,63 @@ RATE = 32000
 FORMAT = pyaudio.paInt16
 CHANNEL = 1
 TIME = 5
-SAVE = "saveVoiceNew.wav"
-OUTPUT = "change_voice_New_2.wav"
+SAVE = "2_saveVoiceNew_01.wav"
+OUTPUT = "3_change_voice_New_02.wav"
 SHIFT = 50
 
-## for enhancing the voice qulity \
+## for enhancing the voice quality
 low_cut = 50
 high_cut = 8000
 cut_off_freq = 100
 
-""" recording """
-audio = pyaudio.PyAudio()
-stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
-print("start recording ...")
-data = []
+def record_audio():
+    audio = pyaudio.PyAudio()
+    stream = audio.open(format=FORMAT, channels=CHANNEL, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
-for i in range(0, int(RATE / CHUNK * TIME)):
-    tmp = stream.read(CHUNK)
-    data.append(tmp)
+    print("start recording ...")
+    data = []
 
-print("finish recording...")
+    for i in range(0, int(RATE / CHUNK * TIME)):
+        tmp = stream.read(CHUNK)
+        data.append(tmp)
 
-stream.stop_stream()
-stream.close()
-audio.terminate()
+    print("finish recording...")
 
-output = wave.open(SAVE, 'wb')
-output.setnchannels(CHANNEL)
-output.setsampwidth(audio.get_sample_size(FORMAT))
-output.setframerate(RATE)
-output.writeframes(b''.join(data))
-output.close()
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
 
-""" changing """
-print("start changing ...")
+    output = wave.open(SAVE, 'wb')
+    output.setnchannels(CHANNEL)
+    output.setsampwidth(audio.get_sample_size(FORMAT))
+    output.setframerate(RATE)
+    output.writeframes(b''.join(data))
+    output.close()
 
-save = wave.open(SAVE, "r")
-save.getparams()
 
-info = list(save.getparams())  # set same parameters for output audio
-info[3] = 0
-output = wave.open(OUTPUT, "w")
-output.setparams(info)
+def change_audio():
+    print("start changing ...")
 
-newRate = RATE // 10
-count = save.getnframes() // newRate  # devide data into chunks
-for i in range(count):
-    data = np.frombuffer(save.readframes(newRate), dtype=np.int16) * 3  # increase quality of voice
+    save = wave.open(SAVE, "r")
+    save.getparams()
+
+    info = list(save.getparams())  # set same parameters for output audio
+    info[3] = 0
+    output = wave.open(OUTPUT, "w")
+    output.setparams(info)
+
+    newRate = RATE // 10
+    count = save.getnframes() // newRate  # devide data into chunks
+    for i in range(count):
+        data = np.frombuffer(save.readframes(newRate), dtype=np.int16) * 3  # increase quality of voice
+        process_chunk(data, output)
+
+    save.close()
+    output.close()
+
+
+def process_chunk(data, output):
     data_fourier = np.fft.rfft(data)
     mean_freq = np.mean(data_fourier)
     data_1 = data[0::4]  # divide each chunk into 4 parts
@@ -97,15 +106,17 @@ for i in range(count):
         np.int16)  # resemble parts together
     output.writeframes(new_data)
 
-    #####
+    enhance_audio(OUTPUT)
 
-    sample_rate, sound_data = wavfile.read(OUTPUT)
+
+def enhance_audio(filepath):
+    sample_rate, sound_data = wavfile.read(filepath)
     sound_data = sound_data / 32767.0
 
     b, a = signal.butter(4, [low_cut / (sample_rate / 2), high_cut / (sample_rate / 2)], btype='band')
     sound_filtered = signal.filtfilt(b, a, sound_data)
 
-    # Apply FFT to filtered sound data
+    #Apply FFT to filtered sound data
     sound_fft = np.fft.fft(sound_filtered)
 
     # Apply high-pass filter to remove low-frequency noise
@@ -121,6 +132,8 @@ for i in range(count):
     # Write the enhanced sound signal to a file
     wavfile.write("change_voice_new.wav", sample_rate, sound_enhanced)
 
-output.close()
-save.close()
-print("check output.wav ")
+
+if __name__ == "__main__":
+    record_audio()
+    change_audio()
+    print("check output.wav")
